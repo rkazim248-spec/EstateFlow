@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "353372777164",
+    "project_id": "estateflow-df9e9",
+    "storage_bucket": "estateflow-df9e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353372777164:android:aabbdd6a8c6fd857a87069",
+        "android_client_info": {
+          "package_name": "com.estateflow.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "353372777164-mao3fjp7mha4icqfemnkpf3if4rav16t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.estateflow.app",
+            "certificate_hash": "26a121edb559d73cfbce7881ac8ecfd08cb3e99d"
+          }
+        },
+        {
+          "client_id": "353372777164-q0v4tqjq4nag94cnnn9f4sp6mugnuav5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBnN7MyfchMYtbpYNx9eohjNlBd8Y6A1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "353372777164-q0v4tqjq4nag94cnnn9f4sp6mugnuav5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "353372777164-d3e7ktgbc2b0tf8bq8u3kmb1k51s533h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.estateflow.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   One warm neutral base and one accent chosen from a curated palette. No
+   gradients. Every accent ships an accessible light and dark variant.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --surface-2: #f1f0ec;
+  --surface-3: #e9e7e1;
+  --sidebar: #fbfaf7;
+  --ink: #17191c;
+  --ink-2: #4b5057;
+  --muted: #6f747c;
+  --border: #e3e1da;
+  --border-strong: #cfccc3;
+
+  --accent: #00696d;
+  --accent-hover: #005558;
+  --accent-soft: #e4f1f0;
+  --accent-ink: #ffffff;
+
+  --success: #1c6444;
+  --success-soft: #e6f2eb;
+  --warning: #855600;
+  --warning-soft: #fbf0d9;
+  --danger: #a8271f;
+  --danger-soft: #fbe9e7;
+  --info: #2c5586;
+  --info-soft: #e7eef7;
+
+  --ring: rgba(0, 105, 109, 0.38);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: #0e0f11;
+  --surface: #16171a;
+  --surface-2: #1d1f23;
+  --surface-3: #26282d;
+  --sidebar: #111214;
+  --ink: #f2f1ed;
+  --ink-2: #c3c5ca;
+  --muted: #92969d;
+  --border: #2a2c31;
+  --border-strong: #3b3e44;
+
+  --accent: #4fbfb8;
+  --accent-hover: #6bd0c9;
+  --accent-soft: #10302e;
+  --accent-ink: #04201f;
+
+  --success: #74c69c;
+  --success-soft: #10261c;
+  --warning: #e0b163;
+  --warning-soft: #2a2111;
+  --danger: #f08a80;
+  --danger-soft: #2c1513;
+  --info: #8db4e2;
+  --info-soft: #131e2b;
+
+  --ring: rgba(79, 191, 184, 0.45);
+}
+
+/* Accent palette — shared values from the Flutter app (lib/core/constants.dart). */
+html[data-accent="teal"] { --accent: #00696d; --accent-hover: #005558; --accent-soft: #e4f1f0; --accent-ink: #ffffff; --ring: rgba(0,105,109,.38); }
+html.dark[data-accent="teal"] { --accent: #4fbfb8; --accent-hover: #6bd0c9; --accent-soft: #10302e; --accent-ink: #04201f; --ring: rgba(79,191,184,.45); }
+
+html[data-accent="indigo"] { --accent: #3f5ba9; --accent-hover: #334a8a; --accent-soft: #e9edf9; --accent-ink: #ffffff; --ring: rgba(63,91,169,.38); }
+html.dark[data-accent="indigo"] { --accent: #9db0ee; --accent-hover: #b6c5f5; --accent-soft: #191f33; --accent-ink: #0b1020; --ring: rgba(157,176,238,.45); }
+
+html[data-accent="violet"] { --accent: #6d43c4; --accent-hover: #5a35a5; --accent-soft: #f0eafa; --accent-ink: #ffffff; --ring: rgba(109,67,196,.38); }
+html.dark[data-accent="violet"] { --accent: #bea4f5; --accent-hover: #cdb9f8; --accent-soft: #201631; --accent-ink: #150a26; --ring: rgba(190,164,245,.45); }
+
+html[data-accent="cyan"] { --accent: #00696e; --accent-hover: #005459; --accent-soft: #e3f2f3; --accent-ink: #ffffff; --ring: rgba(0,105,110,.38); }
+html.dark[data-accent="cyan"] { --accent: #57c2c8; --accent-hover: #75d3d8; --accent-soft: #0f2c2e; --accent-ink: #032022; --ring: rgba(87,194,200,.45); }
+
+html[data-accent="terracotta"] { --accent: #8f4c38; --accent-hover: #763d2c; --accent-soft: #f6eae5; --accent-ink: #ffffff; --ring: rgba(143,76,56,.38); }
+html.dark[data-accent="terracotta"] { --accent: #e0a48e; --accent-hover: #ebb8a5; --accent-soft: #2e1a13; --accent-ink: #25100a; --ring: rgba(224,164,142,.45); }
+
+html[data-accent="forest"] { --accent: #2e6b33; --accent-hover: #245628; --accent-soft: #e7f1e8; --accent-ink: #ffffff; --ring: rgba(46,107,51,.38); }
+html.dark[data-accent="forest"] { --accent: #8dcb92; --accent-hover: #a4d8a8; --accent-soft: #14261a; --accent-ink: #06170b; --ring: rgba(141,203,146,.45); }
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Numbers align in tables and metric cards. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Consistent, visible keyboard focus. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Thin, unobtrusive scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Skeleton shimmer without a gradient sweep (a flat pulse instead). */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.skeleton {
+  background: var(--surface-2);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+/* Subtle dot texture used on editorial panels. Solid dots, no gradient. */
+.dot-grid {
+  background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Respect reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Hide number input spinners — the form has explicit steppers-free inputs. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

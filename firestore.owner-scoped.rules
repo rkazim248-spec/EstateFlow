@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ---------------------------------------------------------------------
+    // OPT-IN, OWNER-SCOPED RULES — NOT DEPLOYED BY DEFAULT.
+    //
+    // Only switch to this file after every legacy `properties` and `clients`
+    // document has an `ownerId`. Records without one become invisible.
+    // Backfill those fields with a trusted Admin SDK script first; see
+    // README.md → "Security posture".
+    //
+    // To deploy:
+    //   copy firestore.owner-scoped.rules firestore.rules
+    //   firebase deploy --only firestore:rules
+    // ---------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsExisting() {
+      return signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    match /properties/{propertyId} {
+      allow read, delete: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update: if ownsExisting() && ownsIncoming();
+    }
+
+    match /clients/{clientId} {
+      allow read, delete: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update: if ownsExisting() && ownsIncoming();
+    }
+
+    match /users/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+
+      match /media/{mediaId} {
+        allow read, write: if signedIn() && request.auth.uid == userId;
+      }
+
+      match /socialAccounts/{accountId} {
+        allow read: if signedIn() && request.auth.uid == userId;
+        allow write: if false;
+      }
+
+      match /socialPosts/{postId} {
+        allow read, write: if signedIn() && request.auth.uid == userId;
+
+        match /results/{resultId} {
+          allow read: if signedIn() && request.auth.uid == userId;
+          allow write: if false;
+        }
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
