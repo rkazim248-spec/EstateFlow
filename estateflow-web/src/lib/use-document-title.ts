@@ -22,6 +22,8 @@ export function useDocumentTitle(title: string | null) {
   }, [title]);
 }
 
+// Auth routes use useDocumentTitle directly in their page components.
+
 const MAIN_ROUTES: Array<{ prefix: string; title: string }> = [
   { prefix: "/dashboard", title: "Dashboard" },
   { prefix: "/properties/new", title: "Add property" },

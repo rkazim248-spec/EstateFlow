@@ -46,30 +46,25 @@ export default function ForgotPasswordPage() {
 
   if (sentTo) {
     return (
-      <div>
-        <EstateFlowBrandHeader height={36} className="mb-7" />
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-accent-soft text-accent">
-          <MailCheck className="h-5 w-5" aria-hidden="true" />
+      <div className="space-y-4">
+        <EstateFlowBrandHeader height={32} className="mb-4" />
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-accent">
+          <MailCheck className="h-4 w-4" aria-hidden="true" />
         </span>
-        <h1 className="mt-4 font-display text-[34px] leading-[1.08] tracking-[-0.015em] text-ink">
+        <h1 className="font-display text-[24px] leading-[1.08] tracking-[-0.015em] text-ink">
           Check your inbox
         </h1>
-        <p className="mt-2 text-sm leading-6 text-muted">
-          If an EstateFlow account exists for <strong className="text-ink">{sentTo}</strong>,
-          Firebase has sent a password reset link. The link expires according to
-          your Firebase Authentication settings.
+        <p className="text-sm leading-6 text-muted">
+          If an account exists for <strong className="text-ink">{sentTo}</strong>,
+          a reset link has been sent.
         </p>
-        <p className="mt-2 text-[12px] leading-5 text-muted">
-          Nothing arrived? Check spam, then try again or contact the person who
-          manages your Firebase project.
-        </p>
-        <div className="mt-6 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <Button variant="secondary" className="w-full" onClick={() => setSentTo(null)}>
             Try another email
           </Button>
           <Link
             href="/login"
-            className="inline-flex h-10 items-center justify-center gap-2 text-[13px] font-medium text-accent underline-offset-4 hover:underline"
+            className="inline-flex h-9 items-center justify-center gap-2 text-[13px] font-medium text-accent underline-offset-4 hover:underline"
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Back to sign in
@@ -80,21 +75,20 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div>
-      <EstateFlowBrandHeader height={36} className="mb-7" />
+    <div className="space-y-4">
+      <EstateFlowBrandHeader height={32} className="mb-4" />
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
         Password reset
       </p>
-      <h1 className="mt-2 font-display text-[34px] leading-[1.08] tracking-[-0.015em] text-ink">
+      <h1 className="font-display text-[24px] leading-[1.08] tracking-[-0.015em] text-ink">
         Reset your password
       </h1>
-      <p className="mt-2 text-sm leading-6 text-muted">
-        Enter the email address on your EstateFlow account. We&apos;ll ask
-        Firebase Authentication to send a reset link.
+      <p className="text-sm leading-6 text-muted">
+        Enter your email to receive a reset link.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-7 space-y-4">
-        <Field label="Email address" htmlFor="reset-email" error={errors.email?.message} required>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">
+        <Field label="Email" htmlFor="reset-email" error={errors.email?.message} required>
           <Input
             id="reset-email"
             type="email"
@@ -107,7 +101,7 @@ export default function ForgotPasswordPage() {
         </Field>
 
         {error ? (
-          <InlineNotice tone="danger" title="Could not send the reset email">
+          <InlineNotice tone="danger" title="Could not send">
             {error}
           </InlineNotice>
         ) : null}
@@ -119,7 +113,7 @@ export default function ForgotPasswordPage() {
 
       <Link
         href="/login"
-        className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent underline-offset-4 hover:underline"
+        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent underline-offset-4 hover:underline"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
         Back to sign in

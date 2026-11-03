@@ -66,7 +66,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <span className="text-border-strong" aria-hidden="true">
             /
           </span>
-          <span>Shared Firebase data with the mobile app</span>
+          <span>EstateFlow</span>
         </div>
 
         <svg

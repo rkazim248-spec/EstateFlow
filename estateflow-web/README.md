@@ -6,7 +6,7 @@ on one client appear on the other.
 
 ## What is implemented
 
-- Email/password and Google sign-in, password reset, and protected app routes.
+- Email/password and Google sign-in, password reset (with custom reset page), and protected app routes.
 - Responsive app shell with desktop sidebar, tablet rail, mobile header, mobile
   bottom navigation, and a mobile drawer. Matching was removed from the web
   app (it remains on mobile).
@@ -70,6 +70,9 @@ The checked-in configuration targets Firebase project `estateflow-df9e9`.
 1. Enable **Email/Password** and **Google** under Authentication → Sign-in method.
 2. Add `localhost` and the production hostname under Authentication → Settings →
    Authorized domains.
+3. (Optional) To use the custom password reset page at `/reset-password`,
+   go to Authentication → Templates → Password reset → Customize action URL
+   and set it to `https://your-domain.com/reset-password`.
 3. Confirm the Firestore database is `(default)` in `nam5`.
 4. Initialize **Firebase Storage** in the console before testing media uploads.
    This repository's Storage rules are ready, but the project's default Storage
