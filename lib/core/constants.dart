@@ -126,7 +126,7 @@ class AccentColors {
   static const List<Color> seeds = [
     Color(0xFF00696D),
     Color(0xFF3F5BA9),
-    Color(0xFF7C4DFF),
+    Color(0xFF6D43C4),
     Color(0xFF00696E),
     Color(0xFF8F4C38),
     Color(0xFF2E6B33),

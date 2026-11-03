@@ -12,7 +12,23 @@ class AppTheme {
   static ThemeData dark(Color seed) => _build(seed, Brightness.dark);
 
   static ThemeData _build(Color seed, Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
     final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
+
+    // Match the web app's neutral palette: warm off-white base, white surface.
+    final scaffoldBg = isDark
+        ? const Color(0xFF0E0F11)
+        : const Color(0xFFF6F5F1);
+    final surfaceColor = isDark
+        ? const Color(0xFF16171A)
+        : const Color(0xFFFFFFFF);
+    final surface2 = isDark
+        ? const Color(0xFF1D1F23)
+        : const Color(0xFFF1F0EC);
+    final border = isDark
+        ? const Color(0xFF2A2C31)
+        : const Color(0xFFE3E1DA);
+
     final outline = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide.none,
@@ -20,8 +36,18 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      colorScheme: scheme.copyWith(
+        surface: surfaceColor,
+        surfaceContainerLow: surfaceColor,
+        surfaceContainer: surface2,
+        surfaceContainerHigh: surface2,
+        surfaceContainerHighest: isDark
+            ? const Color(0xFF26282D)
+            : const Color(0xFFE9E7E1),
+        outline: border,
+        outlineVariant: border,
+      ),
+      scaffoldBackgroundColor: scaffoldBg,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       appBarTheme: AppBarThemeData(
         backgroundColor: scheme.surface,
