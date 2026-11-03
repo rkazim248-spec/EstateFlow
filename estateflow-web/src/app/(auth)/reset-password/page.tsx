@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Lock } from "lucide-react";
 
 import { getFirebase } from "@/lib/firebase";
 import { describeAuthError } from "@/lib/errors";
@@ -93,27 +93,33 @@ function ResetPasswordInner() {
   }
 
   if (verifying) {
-    return <div className="text-sm text-muted">Verifying reset link…</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-sm text-muted">Verifying reset link…</div>
+      </div>
+    );
   }
 
   if (done) {
     return (
-      <div className="space-y-4">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-accent-soft text-accent">
-          <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <h1 className="font-display text-[30px] leading-[1.08] tracking-[-0.015em] text-ink">
-          Password updated
-        </h1>
-        <p className="text-sm leading-6 text-muted">
-          Your password has been reset. You can now sign in with your new
-          password.
-        </p>
+      <div className="space-y-5">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-accent">
+            <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h1 className="font-display text-[22px] leading-[1.08] tracking-[-0.015em] text-ink">
+              Password updated
+            </h1>
+            <p className="text-sm leading-6 text-muted">
+              You can now sign in with your new password.
+            </p>
+          </div>
+        </div>
         <Link
           href="/login"
           className="inline-flex h-10 items-center justify-center gap-2 rounded-field bg-accent px-4 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover"
         >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           Back to sign in
         </Link>
       </div>
@@ -121,20 +127,24 @@ function ResetPasswordInner() {
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-        Password reset
-      </p>
-      <h1 className="font-display text-[30px] leading-[1.08] tracking-[-0.015em] text-ink">
-        Choose a new password
-      </h1>
-      {email ? (
-        <p className="text-sm leading-6 text-muted">
-          Resetting password for <strong className="text-ink">{email}</strong>
-        </p>
-      ) : null}
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-lg bg-surface-2 text-ink">
+          <Lock className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h1 className="font-display text-[22px] leading-[1.08] tracking-[-0.015em] text-ink">
+            Reset password
+          </h1>
+          {email ? (
+            <p className="text-sm leading-6 text-muted">
+              for <strong className="text-ink">{email}</strong>
+            </p>
+          ) : null}
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">
         <Field label="New password" htmlFor="new-password" error={errors.password?.message} required>
           <Input
             id="new-password"
@@ -174,7 +184,6 @@ function ResetPasswordInner() {
         href="/login"
         className="inline-flex items-center gap-1.5 text-[13px] font-medium text-accent underline-offset-4 hover:underline"
       >
-        <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
         Back to sign in
       </Link>
     </div>
