@@ -141,7 +141,7 @@ function ClientsPageInner() {
             ? "Loading your clients from Firestore…"
             : activeCount > 0
               ? `${filtered.length} of ${list.length} clients match your filters.`
-              : `${list.length} client${list.length === 1 ? "" : "s"} in the shared workspace.`
+              : `${list.length} client${list.length === 1 ? "" : "s"}.`
         }
         actions={
           <Link

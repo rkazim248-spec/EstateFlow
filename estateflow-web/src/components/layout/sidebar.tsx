@@ -95,14 +95,6 @@ export function Sidebar({
       </div>
 
       <div className="shrink-0 border-t border-border p-3">
-        {collapsed ? null : (
-          <div className="mb-3 hidden rounded-lg border border-border bg-surface px-3 py-2.5 lg:block">
-            <p className="text-[11px] font-semibold text-ink">Shared workspace</p>
-            <p className="mt-0.5 text-[11px] leading-4 text-muted">
-              Same Firebase records as the mobile app.
-            </p>
-          </div>
-        )}
         <button
           type="button"
           onClick={onToggle}

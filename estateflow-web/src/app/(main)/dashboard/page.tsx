@@ -94,7 +94,7 @@ export default function DashboardPage() {
     <div>
       <PageHeader
         title={firstName ? `Good to see you, ${firstName}` : "Dashboard"}
-        description="Live totals from the same Firebase records the mobile app uses. Buyer and rental counts reflect stated intent, not completed transactions."
+        description="Live totals from your Firebase records. Buyer and rental counts reflect stated intent, not completed transactions."
         actions={
           <>
             <Link

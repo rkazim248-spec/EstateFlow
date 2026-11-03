@@ -154,7 +154,7 @@ function PropertiesPageInner() {
             ? "Loading your listings from Firestore…"
             : activeCount > 0
               ? `${filtered.length} of ${list.length} listings match your filters.`
-              : `${list.length} listing${list.length === 1 ? "" : "s"} in the shared workspace.`
+              : `${list.length} listing${list.length === 1 ? "" : "s"}.`
         }
         actions={
           <Link
