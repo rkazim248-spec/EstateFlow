@@ -378,16 +378,7 @@ export default function SettingsPage() {
                   EstateFlow mobile app reads. Changes appear in both.
                 </span>
               </li>
-              <li className="flex gap-2.5">
-                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                <span>
-                  Images are objects under{" "}
-                  <code className="rounded bg-surface-2 px-1 py-0.5 text-[10px]">
-                    users/&#123;uid&#125;/media
-                  </code>
-                  . Firestore holds metadata only.
-                </span>
-              </li>
+              
               <li className="flex gap-2.5">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                 <span>
@@ -396,13 +387,7 @@ export default function SettingsPage() {
                   and the backfill that legacy records need first.
                 </span>
               </li>
-              <li className="flex gap-2.5">
-                <PlugZap className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                <span>
-                  AI image generation and social publishing stay off until API
-                  credentials and a background publisher are configured.
-                </span>
-              </li>
+              
             </ul>
           </Card>
 

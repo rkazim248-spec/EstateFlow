@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/constants.dart';
 import '../models/client.dart';
@@ -16,9 +17,12 @@ class ClientRepository {
   CollectionReference<Map<String, dynamic>> get _collection =>
       _db.collection(Collections.clients);
 
-  /// Streams every client, alphabetically by name.
+  /// Streams clients owned by the current user, alphabetically by name.
   Stream<List<Client>> watchAll() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return Stream.value(const <Client>[]);
     return _collection
+        .where('ownerId', isEqualTo: uid)
         .orderBy('name')
         .snapshots()
         .map((snapshot) =>
@@ -27,7 +31,9 @@ class ClientRepository {
 
   /// Creates or updates a client.
   Future<void> save(Client client) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     final data = client.toMap();
+    data['ownerId'] = uid;
     if (client.id == null) {
       await _collection.add(data);
     } else {

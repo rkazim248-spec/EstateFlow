@@ -84,47 +84,6 @@ export interface UserProfile {
   createdAt: Date | null;
   updatedAt: Date | null;
 }
-
-export type MediaSource = "upload" | "ai";
-
-export interface MediaRecord {
-  id: string;
-  name: string;
-  /** Cloud Storage object path. Binaries never live in Firestore. */
-  storagePath: string;
-  contentType: string;
-  size: number;
-  width: number | null;
-  height: number | null;
-  propertyId: string | null;
-  source: MediaSource;
-  prompt: string | null;
-  caption: string | null;
-  createdAt: Date | null;
-}
-
-export type SocialPostStatus =
-  | "draft"
-  | "scheduled"
-  | "publishing"
-  | "published"
-  | "failed"
-  | "cancelled";
-
-export interface SocialPostRecord {
-  id: string;
-  caption: string;
-  hashtags: string;
-  mediaId: string | null;
-  mediaUrl: string | null;
-  destinations: string[];
-  status: SocialPostStatus;
-  scheduledFor: Date | null;
-  timeZone: string;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-}
-
 /** Result of comparing one client against one property. */
 export type MatchLabel =
   | "Strong Match"

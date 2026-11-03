@@ -1,56 +1,59 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ---------------------------------------------------------------------
+    // OPT-IN, OWNER-SCOPED RULES — NOT DEPLOYED BY DEFAULT.
+    //
+    // Only switch to this file after every legacy `properties` and `clients`
+    // document has an `ownerId`. Records without one become invisible.
+    // Backfill those fields with a trusted Admin SDK script first; see
+    // README.md → "Security posture".
+    //
+    // To deploy:
+    //   copy firestore.owner-scoped.rules firestore.rules
+    //   firebase deploy --only firestore:rules
+    // ---------------------------------------------------------------------
     function signedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return signedIn() && request.auth.uid == userId;
+    function ownsExisting() {
+      return signedIn() && resource.data.ownerId == request.auth.uid;
     }
 
-    // ---------------------------------------------------------------------
-    // Shared workspace collections
-    //
-    // These are the same top-level collections the Flutter app reads. Records
-    // created before the web app existed do not have an `ownerId`, so access is
-    // limited to authenticated members of this Firebase project instead of a
-    // per-owner filter. `firestore.owner-scoped.rules` contains the stricter
-    // opt-in version; read README.md before switching to it.
-    // ---------------------------------------------------------------------
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.ownerId == request.auth.uid;
+    }
+
     match /properties/{propertyId} {
-      allow read, write: if signedIn();
+      allow read, delete: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update: if ownsExisting() && ownsIncoming();
     }
 
     match /clients/{clientId} {
-      allow read, write: if signedIn();
+      allow read, delete: if ownsExisting();
+      allow create: if ownsIncoming();
+      allow update: if ownsExisting() && ownsIncoming();
     }
 
-    // ---------------------------------------------------------------------
-    // Per-user tree
-    // ---------------------------------------------------------------------
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if signedIn() && request.auth.uid == userId;
 
       match /media/{mediaId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if signedIn() && request.auth.uid == userId;
       }
 
-      // Account metadata may be read by its owner. Tokens must be written and
-      // refreshed by a trusted server using the Admin SDK, which bypasses these
-      // rules. The browser never receives a platform token.
       match /socialAccounts/{accountId} {
-        allow read: if isOwner(userId);
+        allow read: if signedIn() && request.auth.uid == userId;
         allow write: if false;
       }
 
       match /socialPosts/{postId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if signedIn() && request.auth.uid == userId;
 
-        // Per-destination publication results are written only by the
-        // background publisher (Admin SDK). Clients may read their own results.
         match /results/{resultId} {
-          allow read: if isOwner(userId);
+          allow read: if signedIn() && request.auth.uid == userId;
           allow write: if false;
         }
       }

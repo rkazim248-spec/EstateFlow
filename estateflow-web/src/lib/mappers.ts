@@ -19,10 +19,7 @@ import { isPriceUnit, toPkr } from "./money";
 import {
   toDate,
   type ClientRecord,
-  type MediaRecord,
   type PropertyRecord,
-  type SocialPostRecord,
-  type SocialPostStatus,
 } from "./types";
 
 function asString(value: unknown, fallback = ""): string {
@@ -116,52 +113,6 @@ export function mapClient(id: string, data: DocumentData): ClientRecord {
     status: oneOf<ClientStatus>(data.status, CLIENT_STATUSES, "New"),
     ownerId: asString(data.ownerId) || null,
     normalizedBudget: toPkr(budget, budgetUnit),
-    createdAt: toDate(data.createdAt),
-    updatedAt: toDate(data.updatedAt),
-  };
-}
-
-export function mapMedia(id: string, data: DocumentData): MediaRecord {
-  return {
-    id,
-    name: asString(data.name, "Untitled image"),
-    storagePath: asString(data.storagePath),
-    contentType: asString(data.contentType, "image/png"),
-    size: asNumber(data.size),
-    width: typeof data.width === "number" ? data.width : null,
-    height: typeof data.height === "number" ? data.height : null,
-    propertyId: asString(data.propertyId) || null,
-    source: data.source === "ai" ? "ai" : "upload",
-    prompt: asString(data.prompt) || null,
-    caption: asString(data.caption) || null,
-    createdAt: toDate(data.createdAt),
-  };
-}
-
-const SOCIAL_STATUSES: readonly SocialPostStatus[] = [
-  "draft",
-  "scheduled",
-  "publishing",
-  "published",
-  "failed",
-  "cancelled",
-];
-
-export function mapSocialPost(id: string, data: DocumentData): SocialPostRecord {
-  return {
-    id,
-    caption: asString(data.caption),
-    hashtags: asString(data.hashtags),
-    mediaId: asString(data.mediaId) || null,
-    mediaUrl: asString(data.mediaUrl) || null,
-    destinations: Array.isArray(data.destinations)
-      ? data.destinations.filter((item): item is string => typeof item === "string")
-      : [],
-    status: SOCIAL_STATUSES.includes(data.status)
-      ? (data.status as SocialPostStatus)
-      : "draft",
-    scheduledFor: toDate(data.scheduledFor),
-    timeZone: asString(data.timeZone, "Asia/Karachi"),
     createdAt: toDate(data.createdAt),
     updatedAt: toDate(data.updatedAt),
   };

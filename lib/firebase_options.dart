@@ -45,9 +45,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.linux:
       case TargetPlatform.macOS:
       case TargetPlatform.fuchsia:
-        throw UnsupportedError(
-          'EstateFlow is configured for Android, iOS and Web.',
-        );
+        // Firebase does not have a dedicated desktop app registration.
+        // The web configuration works on desktop via the web SDK.
+        return web;
     }
   }
 }

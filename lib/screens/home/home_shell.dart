@@ -5,7 +5,6 @@ import '../clients/client_list_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../properties/property_list_screen.dart';
 import '../settings/settings_screen.dart';
-import '../tools/tools_screen.dart';
 
 /// Bottom-navigation host for the signed-in experience.
 class HomeShell extends StatefulWidget {
@@ -37,7 +36,6 @@ class _HomeShellState extends State<HomeShell> {
           ),
           const PropertyListScreen(),
           const ClientListScreen(),
-          ToolsScreen(authService: widget.authService),
           SettingsScreen(authService: widget.authService),
         ],
       ),
@@ -59,11 +57,6 @@ class _HomeShellState extends State<HomeShell> {
             icon: Icon(Icons.people_outline),
             selectedIcon: Icon(Icons.people),
             label: 'Clients',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.build_outlined),
-            selectedIcon: Icon(Icons.build),
-            label: 'Tools',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

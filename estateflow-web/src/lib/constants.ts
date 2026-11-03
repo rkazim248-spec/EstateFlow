@@ -116,51 +116,9 @@ export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/properties", label: "Properties", icon: "properties" },
   { href: "/clients", label: "Clients", icon: "clients" },
-  { href: "/ai-studio", label: "AI Image Studio", icon: "sparkles" },
-  { href: "/media", label: "Media Library", icon: "media" },
-  { href: "/social", label: "Social Media Hub", icon: "social" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ] as const;
 
 export const DEFAULT_TIME_ZONE = "Asia/Karachi";
 
-export const SOCIAL_PLATFORMS = [
-  {
-    id: "facebook",
-    name: "Facebook Pages",
-    requirement:
-      "A Meta app with Page publishing permission, a Facebook Page you administer, and a verified business.",
-  },
-  {
-    id: "instagram",
-    name: "Instagram",
-    requirement:
-      "An Instagram professional account linked to a Facebook Page, plus Meta content-publishing permission.",
-  },
-  {
-    id: "linkedin",
-    name: "LinkedIn",
-    requirement:
-      "A LinkedIn developer app approved for the “Share on LinkedIn” product and a Page or member token.",
-  },
-  {
-    id: "pinterest",
-    name: "Pinterest",
-    requirement:
-      "A Pinterest developer app with board write access and an approved standard access tier.",
-  },
-  {
-    id: "tiktok",
-    name: "TikTok",
-    requirement:
-      "A TikTok developer app approved for Content Posting API access. Photo posts require a verified app.",
-  },
-  {
-    id: "x",
-    name: "X",
-    requirement:
-      "An X developer project with write access. Posting currently requires a paid API tier.",
-  },
-] as const;
 
-export type SocialPlatformId = (typeof SOCIAL_PLATFORMS)[number]["id"];

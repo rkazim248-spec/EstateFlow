@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     siteName: "EstateFlow",
     title: "EstateFlow — Real Estate Management",
     description:
-      "A calmer workspace for property listings, clients, matching, marketing images and social planning.",
+      "A calmer workspace for property listings and clients.",
     url: "/",
   },
   twitter: {

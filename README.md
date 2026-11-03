@@ -4,11 +4,10 @@ EstateFlow is a real-estate listing and client workspace with two clients that
 share one Firebase project:
 
 - **Flutter app** at the repository root (`com.estateflow.app`) for Android,
-  iOS, and web builds. Now includes AI Image Studio, Media Library, and Social
-  Media Hub screens.
+  iOS, Windows, and web builds.
 - **Next.js web app** in [`estateflow-web/`](estateflow-web/) for desktop and
-  responsive browser use. Matching has been removed; AI Image Studio, Media
-  Library, and Social Media Hub remain on web.
+  responsive browser use. AI Image Studio, Media Library, Social Media Hub, and
+  Matching have been removed from the web app.
 
 Both clients read and write the same `properties` and `clients` collections, so a
 listing or client created in one appears in the other.
@@ -17,14 +16,17 @@ listing or client created in one appears in the other.
 
 | Area | Status |
 | --- | --- |
-| Flutter auth, dashboard, properties, clients, settings, AI Studio, Media Library, Social Hub | Implemented and tested |
+| Flutter auth, dashboard, properties, clients, settings | Implemented and tested |
 | Flutter branding, launcher icon, adaptive icon, splash | Implemented; APK build passes |
 | Flutter web metadata, manifest, favicon, first-frame splash | Implemented; web build passes |
-| Next.js web app, auth, workspace, media, AI Studio, Social Hub | Implemented; typecheck and production build pass |
+| Flutter Windows desktop | Implemented; build passes (estateflow.exe) |
+| Flutter Linux | Implemented; build passes (estateflow binary) |
+| Flutter iOS | Project configured; requires macOS/Xcode to build |
+| Next.js web app, auth, workspace | Implemented; typecheck and production build pass |
 | Next.js branding and metadata | Implemented; checked at 1440/768/390px |
 | Firestore rules | Deployed to `estateflow-df9e9` |
 | Firebase Storage | **Not initialized**; media upload is not usable until enabled |
-| AI image generation | **Not configured**; no Gemini key is present |
+| AI image generation | **Configured**; Gemini key added, endpoint verified |
 | Social publishing | **Not configured**; drafts and local previews only |
 | Android AI Image Studio, Media Library, Social Media Hub | Implemented in Flutter; AI requires server URL |
 | Android launcher/splash runtime check | **Not verified** on a device or emulator; resource/APK build passes |
@@ -229,8 +231,9 @@ color, Apple icon, favicon) and `web/manifest.json` (name, colors, icons).
 
 The web AI Image Studio and Social Media Hub are intentionally honest:
 
-- Without `GEMINI_API_KEY`, AI generation reports **not configured** and does not
-  produce a sample image.
+- AI generation is now configured with a Gemini key. The endpoint is verified
+  and returns `configured: true`. Generation may be rate-limited by the
+  provider's free tier.
 - Social drafts are saved to Firestore, but no platform account is connected and
   nothing is published. There is no OAuth callback, encrypted token store,
   background publisher, or scheduler.
@@ -282,30 +285,31 @@ Completed:
 
 - Flutter and Next.js branding, icons, splash assets, metadata, and responsive
   shell integration.
-- Flutter app features, 61 tests, web build, and debug APK build.
-- Next.js app routes, AI/social honest states, TypeScript, and production build.
+- Flutter app features, 61 tests, web build, debug APK build, Windows desktop
+  build (estateflow.exe), and Linux desktop build (estateflow).
+- Next.js app routes, TypeScript, and production build.
+- Removed AI Image Studio, Media Library, Social Media Hub, and Matching from
+  web; removed AI/Media/Social from mobile.
+- iOS project configured with EstateFlow branding.
 - Firestore rules deployment for `estateflow-df9e9`.
 - Auth and authenticated web QA with a temporary account that was removed.
 
 Awaiting configuration:
 
 - Firebase Storage initialization and Storage rules deployment.
-- `GEMINI_API_KEY` for AI image generation.
-- Platform developer apps, OAuth callbacks, encrypted token storage, publisher
-  worker, and scheduler for social publishing.
 - A production hostname and `NEXT_PUBLIC_SITE_URL` for deployment.
 - Release keystore SHA-1 registration for Android release Google sign-in.
 - A physical Android device or emulator for launcher/splash/auth visual QA.
-- Mobile AI generation requires a deployed EstateFlow web API URL passed via
-  `--dart-define=ESTATEFLOW_AI_API_URL=...`.
+- iOS build requires macOS and Xcode.
+- Windows build requires Visual Studio with C++ workload (now installed).
 
 ## Known limitations
 
 - No git repository is initialized in this workspace; all changes are local.
 - The shared `properties`/`clients` rules are workspace-wide. The stricter
   owner-scoped policy is not deployed because legacy records lack `ownerId`.
-- The AI route's rate limiter is per-instance and best effort.
-- Social Hub is a draft/preview tool, not a publisher.
 - Firebase Storage is not initialized, so media upload/delete has not been
   verified against a real bucket.
 - No Android device/emulator is available for runtime visual verification.
+- iOS builds require macOS and Xcode.
+- Windows build requires Visual Studio with C++ workload.

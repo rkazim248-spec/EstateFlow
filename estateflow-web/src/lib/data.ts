@@ -9,12 +9,6 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import {
-  deleteObject,
-  getDownloadURL,
-  ref,
-  uploadBytesResumable,
-} from "firebase/storage";
 
 import {
   CLIENT_PURPOSES,
@@ -32,7 +26,7 @@ import {
 import { getFirebase } from "./firebase";
 import { toPkr } from "./money";
 import type { ClientFormValues, PropertyFormValues } from "./validation";
-import type { MediaRecord, SocialPostStatus, UserProfile } from "./types";
+import type { UserProfile } from "./types";
 
 export const PROPERTIES_COLLECTION = "properties";
 export const CLIENTS_COLLECTION = "clients";
@@ -230,157 +224,6 @@ export async function updateUserProfile(
     { ...patch, updatedAt: serverTimestamp() },
     { merge: true },
   );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Media                                                                       */
-/* -------------------------------------------------------------------------- */
-
-function extensionFor(contentType: string): string {
-  if (contentType.includes("jpeg")) return "jpg";
-  if (contentType.includes("webp")) return "webp";
-  if (contentType.includes("gif")) return "gif";
-  return "png";
-}
-
-function randomId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-export interface UploadOptions {
-  propertyId?: string | null;
-  source?: "upload" | "ai";
-  prompt?: string | null;
-  caption?: string | null;
-  name?: string;
-  onProgress?: (percent: number) => void;
-}
-
-export async function uploadMedia(
-  blob: Blob,
-  uid: string,
-  options: UploadOptions = {},
-): Promise<MediaRecord> {
-  if (!blob.type.startsWith("image/")) {
-    throw new Error("Only image files can be added to the media library.");
-  }
-  if (blob.size > MAX_UPLOAD_BYTES) {
-    throw new Error("Images must be 10 MB or smaller.");
-  }
-
-  const { db, storage } = getFirebase();
-  const id = randomId();
-  const contentType = blob.type || "image/png";
-  const storagePath = `users/${uid}/media/${id}.${extensionFor(contentType)}`;
-  const storageRef = ref(storage, storagePath);
-  const task = uploadBytesResumable(storageRef, blob, { contentType });
-
-  await new Promise<void>((resolve, reject) => {
-    task.on(
-      "state_changed",
-      (snapshot) => {
-        if (snapshot.totalBytes > 0) {
-          options.onProgress?.(
-            Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
-          );
-        }
-      },
-      reject,
-      () => resolve(),
-    );
-  });
-
-  const name =
-    options.name?.trim() ||
-    (options.source === "ai" ? "AI concept" : "Uploaded image");
-  const createdAt = new Date();
-
-  const created = await addDoc(collection(db, "users", uid, "media"), {
-    name,
-    storagePath,
-    contentType,
-    size: blob.size,
-    propertyId: options.propertyId ?? null,
-    source: options.source ?? "upload",
-    prompt: options.prompt ?? null,
-    caption: options.caption ?? null,
-    createdAt: serverTimestamp(),
-  });
-
-  return {
-    id: created.id,
-    name,
-    storagePath,
-    contentType,
-    size: blob.size,
-    width: null,
-    height: null,
-    propertyId: options.propertyId ?? null,
-    source: options.source ?? "upload",
-    prompt: options.prompt ?? null,
-    caption: options.caption ?? null,
-    createdAt,
-  };
-}
-
-export async function getMediaUrl(storagePath: string): Promise<string> {
-  const { storage } = getFirebase();
-  return getDownloadURL(ref(storage, storagePath));
-}
-
-export async function deleteMedia(
-  uid: string,
-  media: Pick<MediaRecord, "id" | "storagePath">,
-): Promise<void> {
-  const { db, storage } = getFirebase();
-  try {
-    await deleteObject(ref(storage, media.storagePath));
-  } catch (error) {
-    const code = (error as { code?: string }).code;
-    if (code !== "storage/object-not-found") throw error;
-  }
-  await deleteDoc(doc(db, "users", uid, "media", media.id));
-}
-
-/* -------------------------------------------------------------------------- */
-/* Social drafts                                                               */
-/* -------------------------------------------------------------------------- */
-
-export async function createSocialDraft(
-  uid: string,
-  input: {
-    caption: string;
-    hashtags: string;
-    mediaId: string | null;
-    mediaUrl: string | null;
-    destinations: string[];
-    status?: SocialPostStatus;
-    scheduledFor?: Date | null;
-    timeZone: string;
-  },
-): Promise<string> {
-  const { db } = getFirebase();
-  const created = await addDoc(collection(db, "users", uid, "socialPosts"), {
-    caption: input.caption.trim(),
-    hashtags: input.hashtags.trim(),
-    mediaId: input.mediaId,
-    mediaUrl: input.mediaUrl,
-    destinations: input.destinations,
-    status: input.status ?? "draft",
-    scheduledFor: input.scheduledFor ?? null,
-    timeZone: input.timeZone,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return created.id;
-}
-
-export async function deleteSocialPost(uid: string, id: string): Promise<void> {
-  const { db } = getFirebase();
-  await deleteDoc(doc(db, "users", uid, "socialPosts", id));
 }
 
 /**

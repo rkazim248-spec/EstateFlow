@@ -3,6 +3,8 @@
 import {
   collection,
   onSnapshot,
+  query,
+  where,
   type Unsubscribe,
 } from "firebase/firestore";
 import {
@@ -61,7 +63,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     unsubscribers.push(
       onSnapshot(
-        collection(db, PROPERTIES_COLLECTION),
+        query(collection(db, PROPERTIES_COLLECTION), where("ownerId", "==", user.uid)),
         (snapshot) => {
           if (!active) return;
           const next = snapshot.docs.map((document) =>
@@ -80,7 +82,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     unsubscribers.push(
       onSnapshot(
-        collection(db, CLIENTS_COLLECTION),
+        query(collection(db, CLIENTS_COLLECTION), where("ownerId", "==", user.uid)),
         (snapshot) => {
           if (!active) return;
           const next = snapshot.docs.map((document) =>

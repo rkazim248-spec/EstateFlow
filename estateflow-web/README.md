@@ -11,12 +11,11 @@ on one client appear on the other.
   bottom navigation, and a mobile drawer. Matching was removed from the web
   app (it remains on mobile).
 - Dashboard, properties, clients, and property/client detail and edit forms.
+  (AI Image Studio, Media Library, Social Media Hub, and Matching have been
+  removed.)
 - Settings with profile sync, light/dark/system theme, six persisted accent
   palettes, privacy/terms links, and sign-out.
-- Media Library metadata and private Firebase Storage upload/delete flow
-  (Storage initialization is still pending).
-- AI Image Studio with a server-side Gemini route.
-- Social Media Hub with local previews and Firestore-backed drafts only.
+- Property and client management with detail/edit forms.
 - Branded auth screens, favicons, Apple icon, PWA manifest, Open Graph and
   Twitter images, and route-aware browser titles.
 - Light and dark brand assets; no CSS filters are used to recolor the official
@@ -142,7 +141,8 @@ and does not show sample output. With a key, the server calls the configured
 Gemini image model, returns generated image bytes, and lets the user save the
 result to the private Media Library.
 
-Current status: **not configured** — no Gemini key is present in this workspace.
+Current status: **configured** — Gemini key is present and the endpoint returns
+`configured: true`. Generation may be rate-limited by the provider's free tier.
 Provider quota and billing belong to the key owner. The per-instance rate limit
 in the route is best effort; a production deployment should use a shared limiter.
 
@@ -201,8 +201,8 @@ There is no Firebase Hosting configuration in this repository. Do not use
 
 - Firebase Storage is not initialized for `estateflow-df9e9` yet. Media uploads
   will not work until it is enabled in the Firebase console.
-- AI generation has no configured provider key.
-- Social publishing is not configured and is intentionally draft-only.
+- AI Image Studio, Media Library, Social Media Hub, and Matching have been
+  removed from the web app.
 - The shared `properties`/`clients` rules are workspace-wide, not per-owner.
   Legacy records have no `ownerId`.
 - There is no automated web test suite; TypeScript, production build, and manual

@@ -16,9 +16,6 @@ const BOTTOM_ITEMS = [
   { href: "/dashboard", label: "Home", icon: "dashboard" },
   { href: "/properties", label: "Properties", icon: "properties" },
   { href: "/clients", label: "Clients", icon: "clients" },
-  { href: "/ai-studio", label: "AI Image Studio", icon: "sparkles" },
-  { href: "/media", label: "Media Library", icon: "media" },
-  { href: "/social", label: "Social Media Hub", icon: "social" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ] as const;
 

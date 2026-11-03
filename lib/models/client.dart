@@ -18,6 +18,7 @@ class Client {
     this.requirements = '',
     this.condition = '',
     required this.status,
+    this.ownerId,
   });
 
   final String? id;
@@ -44,6 +45,9 @@ class Client {
 
   /// New, Contacted, Negotiating, Closed or Lost.
   final String status;
+
+  /// The UID of the user who owns this client.
+  final String? ownerId;
 
   String get resolvedBedrooms =>
       bedrooms == 'Custom' && customBedrooms.trim().isNotEmpty
@@ -85,6 +89,7 @@ class Client {
       requirements: data['requirements'] as String? ?? '',
       condition: data['condition'] as String? ?? '',
       status: data['status'] as String? ?? '',
+      ownerId: data['ownerId'] as String?,
     );
   }
 
@@ -101,6 +106,7 @@ class Client {
         'requirements': requirements,
         'condition': condition,
         'status': status,
+        'ownerId': ownerId,
       };
 
   Client copyWith({

@@ -28,9 +28,6 @@ const MAIN_ROUTES: Array<{ prefix: string; title: string }> = [
   { prefix: "/properties", title: "Properties" },
   { prefix: "/clients/new", title: "Add client" },
   { prefix: "/clients", title: "Clients" },
-  { prefix: "/ai-studio", title: "AI Image Studio" },
-  { prefix: "/media", title: "Media Library" },
-  { prefix: "/social", title: "Social Media Hub" },
   { prefix: "/settings", title: "Settings" },
 ];
 

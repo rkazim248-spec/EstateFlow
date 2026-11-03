@@ -35,6 +35,7 @@ class Property {
     required this.ownerName,
     required this.ownerPhone,
     this.ownerCondition = '',
+    this.ownerId,
   });
 
   final String? id;
@@ -63,6 +64,7 @@ class Property {
   final String ownerName;
   final String ownerPhone;
   final String ownerCondition;
+  final String? ownerId;
 
   /// The bedroom description, resolving the `Custom` case.
   String get resolvedBedrooms =>
@@ -109,6 +111,7 @@ class Property {
       ownerName: data['ownerName'] as String? ?? '',
       ownerPhone: data['ownerPhone'] as String? ?? '',
       ownerCondition: data['ownerCondition'] as String? ?? '',
+      ownerId: data['ownerId'] as String?,
     );
   }
 
@@ -127,6 +130,7 @@ class Property {
         'ownerName': ownerName,
         'ownerPhone': ownerPhone,
         'ownerCondition': ownerCondition,
+        'ownerId': ownerId,
       };
 
   Property copyWith({

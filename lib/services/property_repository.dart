@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/constants.dart';
 import '../models/property.dart';
@@ -16,9 +17,12 @@ class PropertyRepository {
   CollectionReference<Map<String, dynamic>> get _collection =>
       _db.collection(Collections.properties);
 
-  /// Streams every listing, newest first.
+  /// Streams listings owned by the current user, newest first.
   Stream<List<Property>> watchAll() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return Stream.value(const <Property>[]);
     return _collection
+        .where('ownerId', isEqualTo: uid)
         .orderBy('name')
         .snapshots()
         .map((snapshot) =>
@@ -27,7 +31,9 @@ class PropertyRepository {
 
   /// Creates or updates a listing.
   Future<void> save(Property property) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     final data = property.toMap();
+    data['ownerId'] = uid;
     if (property.id == null) {
       await _collection.add(data);
     } else {
