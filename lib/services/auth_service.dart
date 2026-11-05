@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/constants.dart';
@@ -22,12 +22,18 @@ class AuthService {
 
   Future<void> _ensureGoogleInitialized() async {
     if (_googleInitialized) return;
-    await _google.initialize(
-      // Android reads the server client id from google-services.json and iOS
-      // from GoogleService-Info.plist; the web SDK needs to be told.
-      clientId: kIsWeb ? GoogleOAuth.webClientId : null,
-    );
-    _googleInitialized = true;
+    try {
+      await _google.initialize(
+        // Android reads the server client id from google-services.json and iOS
+        // from GoogleService-Info.plist; the web SDK needs to be told.
+        clientId: kIsWeb ? GoogleOAuth.webClientId : null,
+      );
+      _googleInitialized = true;
+    } catch (e) {
+      // Google Sign-In may not be available on all devices.
+      // The app can still function with email/password auth.
+      debugPrint('Google Sign-In initialization failed: $e');
+    }
   }
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();

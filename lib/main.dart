@@ -17,6 +17,11 @@ Future<void> main() async {
   final settings = SettingsController();
   await settings.load();
 
+  // Catch unhandled errors to prevent crashes.
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+  };
+
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     configureFirestore();
@@ -25,7 +30,11 @@ Future<void> main() async {
     return;
   }
 
-  runApp(EstateFlowApp(settings: settings, authService: AuthService()));
+  try {
+    runApp(EstateFlowApp(settings: settings, authService: AuthService()));
+  } catch (error) {
+    runApp(_StartupFailureApp(error: error));
+  }
 }
 
 /// Root widget: owns the theme and swaps between the auth and app shells.
