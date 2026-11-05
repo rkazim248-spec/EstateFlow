@@ -123,7 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <footer className="hidden border-t border-border px-8 py-4 md:flex md:items-center md:justify-between md:gap-4">
             <p className="text-[11px] text-muted">
-              EstateFlow · shared Firebase workspace with the mobile app
+              EstateFlow
             </p>
             <div className="flex items-center gap-4 text-[11px] text-muted">
               <Link href="/privacy" className="underline-offset-4 hover:text-ink hover:underline">
