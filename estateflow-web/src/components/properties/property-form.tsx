@@ -135,7 +135,7 @@ export function PropertyForm({
     setSubmitError(null);
     try {
       if (mode === "edit" && property) {
-        await updateProperty(property.id, values, user.uid);
+        await updateProperty(property.id, values, user.id);
         savedRef.current = true;
         toast({
           variant: "success",
@@ -144,7 +144,7 @@ export function PropertyForm({
         });
         router.push(`/properties/${property.id}`);
       } else {
-        const id = await createProperty(values, user.uid);
+        const id = await createProperty(values, user.id);
         savedRef.current = true;
         toast({
           variant: "success",

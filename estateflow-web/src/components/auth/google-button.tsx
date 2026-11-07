@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Loader2 } from "lucide-react";
 
-import { getFirebase } from "@/lib/firebase";
+import { supabase } from "@/lib/auth";
 import { describeAuthError } from "@/lib/errors";
 import { cn } from "@/lib/cn";
 
@@ -39,19 +38,19 @@ export function GoogleButton({
 }: {
   label: string;
   next?: string;
-  onError?: (message: string) => void;
   className?: string;
+  onError?: (message: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
     setLoading(true);
     try {
-      const { auth } = getFirebase();
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(auth, provider);
-      window.location.assign(next);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}${next}` },
+      });
+      if (error) throw error;
     } catch (error) {
       onError?.(describeAuthError(error));
       setLoading(false);

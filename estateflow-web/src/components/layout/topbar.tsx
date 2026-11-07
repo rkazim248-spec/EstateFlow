@@ -18,9 +18,9 @@ import {
 import { ACCENTS, NAV_ITEMS } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/auth";
 import { useTheme, type AppearanceMode } from "@/lib/theme";
 import { usePreview } from "@/lib/preview";
-import { updateUserProfile } from "@/lib/data";
 import { describeDataError } from "@/lib/errors";
 import { Button, buttonClasses, useToast } from "@/components/ui";
 import { EstateFlowLogo } from "@/components/brand/estateflow-logo";
@@ -78,7 +78,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   const { section, page } = sectionLabel(pathname);
   const displayName =
-    profile?.name || user?.displayName || user?.email?.split("@")[0] || "Account";
+    profile?.name || (user?.user_metadata?.full_name as string) || user?.email?.split("@")[0] || "Account";
   const email = profile?.email || user?.email || "";
   const activeAppearance =
     APPEARANCE_OPTIONS.find((option) => option.value === mode) ??
@@ -91,7 +91,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   }) {
     if (!user) return;
     try {
-      await updateUserProfile(user.uid, patch);
+      await supabase.from("user_profiles").update(patch).eq("id", user.id);
     } catch (error) {
       toast({
         variant: "error",

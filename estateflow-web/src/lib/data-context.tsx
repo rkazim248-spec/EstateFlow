@@ -1,25 +1,9 @@
 "use client";
 
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-  type Unsubscribe,
-} from "firebase/firestore";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { describeDataError } from "./errors";
-import { getFirebase } from "./firebase";
-import { CLIENTS_COLLECTION, PROPERTIES_COLLECTION } from "./data";
+import { supabase } from "./supabase";
 import { mapClient, mapProperty } from "./mappers";
 import { useAuth } from "./auth";
 import type { ClientRecord, PropertyRecord } from "./types";
@@ -54,54 +38,78 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
 
     let active = true;
-    const { db } = getFirebase();
-    const unsubscribers: Unsubscribe[] = [];
-
     setPropertiesLoading(true);
     setClientsLoading(true);
     setError(null);
 
-    unsubscribers.push(
-      onSnapshot(
-        query(collection(db, PROPERTIES_COLLECTION), where("ownerId", "==", user.uid)),
-        (snapshot) => {
-          if (!active) return;
-          const next = snapshot.docs.map((document) =>
-            mapProperty(document.id, document.data()),
-          );
-          setProperties(next);
-          setPropertiesLoading(false);
-        },
-        (snapshotError) => {
-          if (!active) return;
-          setError(describeDataError(snapshotError));
-          setPropertiesLoading(false);
-        },
-      ),
-    );
+    const userId = user.id;
 
-    unsubscribers.push(
-      onSnapshot(
-        query(collection(db, CLIENTS_COLLECTION), where("ownerId", "==", user.uid)),
-        (snapshot) => {
-          if (!active) return;
-          const next = snapshot.docs.map((document) =>
-            mapClient(document.id, document.data()),
-          );
-          setClients(next);
-          setClientsLoading(false);
-        },
-        (snapshotError) => {
-          if (!active) return;
-          setError(describeDataError(snapshotError));
-          setClientsLoading(false);
-        },
-      ),
-    );
+    // Fetch properties
+    async function fetchProperties() {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("properties")
+          .select("*")
+          .eq("owner_id", userId)
+          .order("name");
+        if (fetchError) throw fetchError;
+        if (!active) return;
+        const next = (data || []).map((document) => mapProperty(document.id, document));
+        setProperties(next);
+        setPropertiesLoading(false);
+      } catch (fetchError) {
+        if (!active) return;
+        setError(describeDataError(fetchError));
+        setPropertiesLoading(false);
+      }
+    }
+
+    // Fetch clients
+    async function fetchClients() {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("clients")
+          .select("*")
+          .eq("owner_id", userId)
+          .order("name");
+        if (fetchError) throw fetchError;
+        if (!active) return;
+        const next = (data || []).map((document) => mapClient(document.id, document));
+        setClients(next);
+        setClientsLoading(false);
+      } catch (fetchError) {
+        if (!active) return;
+        setError(describeDataError(fetchError));
+        setClientsLoading(false);
+      }
+    }
+
+    void fetchProperties();
+    void fetchClients();
+
+    // Subscribe to real-time changes
+    const propertiesChannel = supabase
+      .channel("properties-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "properties", filter: `owner_id=eq.${userId}` },
+        () => void fetchProperties(),
+      )
+      .subscribe();
+
+    const clientsChannel = supabase
+      .channel("clients-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "clients", filter: `owner_id=eq.${userId}` },
+        () => void fetchClients(),
+      )
+      .subscribe();
 
     return () => {
       active = false;
-      unsubscribers.forEach((unsubscribe) => unsubscribe());
+      void supabase.removeChannel(propertiesChannel);
+      void supabase.removeChannel(clientsChannel);
     };
   }, [user, attempt]);
 

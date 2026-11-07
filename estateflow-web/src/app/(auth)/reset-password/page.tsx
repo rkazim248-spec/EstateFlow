@@ -5,11 +5,10 @@ import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { ArrowLeft, CheckCircle2, Lock } from "lucide-react";
 
-import { getFirebase } from "@/lib/firebase";
 import { describeAuthError } from "@/lib/errors";
+import { supabase } from "@/lib/auth";
 import { Button, Field, InlineNotice, Input } from "@/components/ui";
 import { useDocumentTitle } from "@/lib/use-document-title";
 
@@ -65,16 +64,30 @@ function ResetPasswordInner() {
       return;
     }
     setOobCode(code);
-    const { auth } = getFirebase();
-    verifyPasswordResetCode(auth, code)
-      .then((verifiedEmail) => {
-        setEmail(verifiedEmail);
+    // Supabase uses the token_hash from the URL
+    const tokenHash = params.get("token_hash");
+    if (tokenHash) {
+      supabase.auth
+        .verifyOtp({ token_hash: tokenHash, type: "recovery" })
+        .then(({ data }) => {
+          if (data.user?.email) setEmail(data.user.email);
+          setVerifying(false);
+        })
+        .catch((err) => {
+          setError(describeAuthError(err));
+          setVerifying(false);
+        });
+    } else {
+      // Fallback: try to get email from Supabase session
+      const session = supabase.auth.getSession();
+      session.then(({ data }) => {
+        if (data.session?.user?.email) setEmail(data.session.user.email);
         setVerifying(false);
-      })
-      .catch((err) => {
+      }).catch((err) => {
         setError(describeAuthError(err));
         setVerifying(false);
       });
+    }
   }, []);
 
   async function onSubmit(values: ResetPasswordValues) {
@@ -82,8 +95,8 @@ function ResetPasswordInner() {
     setSubmitting(true);
     setError(null);
     try {
-      const { auth } = getFirebase();
-      await confirmPasswordReset(auth, oobCode, values.password);
+      const { error } = await supabase.auth.updateUser({ password: values.password });
+      if (error) throw error;
       setDone(true);
     } catch (submitError) {
       setError(describeAuthError(submitError));

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { updateProfile } from "firebase/auth";
 import {
   ArrowRight,
   Check,
@@ -20,8 +19,8 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/auth";
 import { ACCENTS } from "@/lib/constants";
-import { updateUserProfile } from "@/lib/data";
 import { describeAuthError, describeDataError } from "@/lib/errors";
 import { useTheme, type AppearanceMode } from "@/lib/theme";
 import { profileSchema } from "@/lib/validation";
@@ -71,7 +70,7 @@ export default function SettingsPage() {
   const { mode, accent, setMode, setAccent } = useTheme();
   const { toast } = useToast();
 
-  const currentName = profile?.name || user?.displayName || "";
+  const currentName = profile?.name || (user?.user_metadata?.full_name as string) || "";
   const currentEmail = profile?.email || user?.email || "";
 
   const [name, setName] = useState(currentName);
@@ -101,10 +100,8 @@ export default function SettingsPage() {
     setSaveError(null);
     setSaving(true);
     try {
-      if (user.displayName !== parsed.data.name) {
-        await updateProfile(user, { displayName: parsed.data.name });
-      }
-      await updateUserProfile(user.uid, { name: parsed.data.name });
+      await supabase.auth.updateUser({ data: { full_name: parsed.data.name } });
+      await supabase.from("user_profiles").update({ name: parsed.data.name }).eq("id", user.id);
       await refreshProfile();
       toast({ variant: "success", title: "Profile updated", description: "Your name is saved for this account." });
     } catch (error) {
@@ -116,7 +113,9 @@ export default function SettingsPage() {
 
   function persistTheme(patch: { appearance?: AppearanceMode; accent?: string }) {
     if (!user) return;
-    void updateUserProfile(user.uid, patch).catch((error) => {
+    void supabase.from("user_profiles").update(patch).eq("id", user.id).then(
+      () => {},
+      (error) => {
       toast({
         variant: "error",
         title: "Appearance saved on this device only",
@@ -329,7 +328,7 @@ export default function SettingsPage() {
                 <dt className="text-muted">Authentication</dt>
                 <dd>
                   <Badge tone="neutral">
-                    {user?.providerData.some((provider) => provider.providerId === "google.com")
+                    {user?.user_metadata?.provider === "google"
                       ? "Google + password"
                       : "Email and password"}
                   </Badge>
@@ -337,8 +336,8 @@ export default function SettingsPage() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <dt className="text-muted">User id</dt>
-                <dd className="max-w-[220px] truncate font-mono text-[11px] text-ink-2" title={user?.uid}>
-                  {user?.uid ?? "—"}
+                <dd className="max-w-[220px] truncate font-mono text-[11px] text-ink-2" title={user?.id}>
+                  {user?.id ?? "—"}
                 </dd>
               </div>
             </dl>

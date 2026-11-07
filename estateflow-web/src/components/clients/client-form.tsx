@@ -125,7 +125,7 @@ export function ClientForm({
     setSubmitError(null);
     try {
       if (mode === "edit" && client) {
-        await updateClient(client.id, values, user.uid);
+        await updateClient(client.id, values, user.id);
         savedRef.current = true;
         toast({
           variant: "success",
@@ -134,7 +134,7 @@ export function ClientForm({
         });
         router.push(`/clients/${client.id}`);
       } else {
-        const id = await createClient(values, user.uid);
+        const id = await createClient(values, user.id);
         savedRef.current = true;
         toast({
           variant: "success",

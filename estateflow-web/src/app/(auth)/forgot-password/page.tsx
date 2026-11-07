@@ -4,15 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { ArrowLeft, MailCheck } from "lucide-react";
 
-import { getFirebase } from "@/lib/firebase";
 import { describeAuthError } from "@/lib/errors";
 import { forgotPasswordSchema, type ForgotPasswordValues } from "@/lib/validation";
 import { Button, Field, InlineNotice, Input } from "@/components/ui";
 import { EstateFlowBrandHeader } from "@/components/brand/estateflow-logo";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { supabase } from "@/lib/auth";
 
 export default function ForgotPasswordPage() {
   useDocumentTitle("Reset password");
@@ -34,8 +33,10 @@ export default function ForgotPasswordPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const { auth } = getFirebase();
-      await sendPasswordResetEmail(auth, values.email.trim());
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
       setSentTo(values.email.trim());
     } catch (submitError) {
       setError(describeAuthError(submitError));
