@@ -1,45 +1,42 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../core/constants.dart';
 import '../models/property.dart';
 
-/// Reads and writes the `properties` collection.
+/// Reads and writes the `properties` table in Supabase.
 class PropertyRepository {
-  PropertyRepository([this._firestore]);
+  PropertyRepository([this._client]);
 
-  final FirebaseFirestore? _firestore;
+  final SupabaseClient? _client;
 
-  /// Resolved lazily so the repository can be constructed before Firebase is
-  /// initialised, and so tests can inject a fake.
-  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+  SupabaseClient get _db => _client ?? Supabase.instance.client;
 
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _db.collection(Collections.properties);
-
-  /// Streams listings owned by the current user, newest first.
+  /// Streams every listing owned by the current user, newest first.
   Stream<List<Property>> watchAll() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _db.auth.currentUser?.id;
     if (uid == null) return Stream.value(const <Property>[]);
-    return _collection
-        .where('ownerId', isEqualTo: uid)
-        .orderBy('name')
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map(Property.fromDocument).toList(growable: false));
+
+    return _db
+        .from('properties')
+        .stream(primaryKey: ['id'])
+        .eq('owner_id', uid)
+        .order('name')
+        .map((rows) => rows.map((row) => Property.fromMap(row['id'] as String, row)).toList(growable: false));
   }
 
   /// Creates or updates a listing.
   Future<void> save(Property property) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _db.auth.currentUser?.id;
     final data = property.toMap();
-    data['ownerId'] = uid;
+    data['owner_id'] = uid;
+
     if (property.id == null) {
-      await _collection.add(data);
+      await _db.from('properties').insert(data);
     } else {
-      await _collection.doc(property.id!).set(data, SetOptions(merge: true));
+      await _db.from('properties').update(data).eq('id', property.id!);
     }
   }
 
-  Future<void> delete(String id) => _collection.doc(id).delete();
+  Future<void> delete(String id) async {
+    await _db.from('properties').delete().eq('id', id);
+  }
 }

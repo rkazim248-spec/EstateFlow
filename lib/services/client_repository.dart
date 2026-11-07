@@ -1,45 +1,42 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../core/constants.dart';
 import '../models/client.dart';
 
-/// Reads and writes the `clients` collection.
+/// Reads and writes the `clients` table in Supabase.
 class ClientRepository {
-  ClientRepository([this._firestore]);
+  ClientRepository([this._client]);
 
-  final FirebaseFirestore? _firestore;
+  final SupabaseClient? _client;
 
-  /// Resolved lazily so the repository can be constructed before Firebase is
-  /// initialised, and so tests can inject a fake.
-  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+  SupabaseClient get _db => _client ?? Supabase.instance.client;
 
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _db.collection(Collections.clients);
-
-  /// Streams clients owned by the current user, alphabetically by name.
+  /// Streams every client owned by the current user, alphabetically by name.
   Stream<List<Client>> watchAll() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _db.auth.currentUser?.id;
     if (uid == null) return Stream.value(const <Client>[]);
-    return _collection
-        .where('ownerId', isEqualTo: uid)
-        .orderBy('name')
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map(Client.fromDocument).toList(growable: false));
+
+    return _db
+        .from('clients')
+        .stream(primaryKey: ['id'])
+        .eq('owner_id', uid)
+        .order('name')
+        .map((rows) => rows.map((row) => Client.fromMap(row['id'] as String, row)).toList(growable: false));
   }
 
   /// Creates or updates a client.
   Future<void> save(Client client) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _db.auth.currentUser?.id;
     final data = client.toMap();
-    data['ownerId'] = uid;
+    data['owner_id'] = uid;
+
     if (client.id == null) {
-      await _collection.add(data);
+      await _db.from('clients').insert(data);
     } else {
-      await _collection.doc(client.id!).set(data, SetOptions(merge: true));
+      await _db.from('clients').update(data).eq('id', client.id!);
     }
   }
 
-  Future<void> delete(String id) => _collection.doc(id).delete();
+  Future<void> delete(String id) async {
+    await _db.from('clients').delete().eq('id', id);
+  }
 }

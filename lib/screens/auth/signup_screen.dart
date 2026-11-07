@@ -43,7 +43,10 @@ class _SignupScreenState extends State<SignupScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
-      await credential.user?.updateDisplayName(_nameController.text.trim());
+      // Update display name via Supabase user metadata
+      if (credential.user != null) {
+        await widget.authService.updateDisplayName(_nameController.text.trim());
+      }
     } catch (error) {
       _showError(friendlyAuthError(error));
     } finally {

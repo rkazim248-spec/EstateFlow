@@ -1,15 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/app_theme.dart';
 import 'core/settings_scope.dart';
-import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_shell.dart';
 import 'services/auth_service.dart';
-import 'services/firestore_service.dart';
 import 'services/settings_controller.dart';
+import 'supabase_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,24 +15,17 @@ Future<void> main() async {
   final settings = SettingsController();
   await settings.load();
 
-  // Catch unhandled errors to prevent crashes.
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-  };
-
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    configureFirestore();
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      publishableKey: SupabaseConfig.publishableKey,
+    );
   } catch (error) {
     runApp(_StartupFailureApp(error: error));
     return;
   }
 
-  try {
-    runApp(EstateFlowApp(settings: settings, authService: AuthService()));
-  } catch (error) {
-    runApp(_StartupFailureApp(error: error));
-  }
+  runApp(EstateFlowApp(settings: settings, authService: AuthService()));
 }
 
 /// Root widget: owns the theme and swaps between the auth and app shells.
@@ -77,8 +68,8 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: authService.authStateChanges,
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -86,8 +77,8 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        final user = snapshot.data;
-        if (user == null) {
+        final session = snapshot.data?.session;
+        if (session == null) {
           return LoginScreen(authService: authService);
         }
         return HomeShell(authService: authService);
@@ -96,7 +87,7 @@ class AuthGate extends StatelessWidget {
   }
 }
 
-/// Shown when Firebase cannot start, usually a missing platform config.
+/// Shown when Supabase cannot start.
 class _StartupFailureApp extends StatelessWidget {
   const _StartupFailureApp({required this.error});
 

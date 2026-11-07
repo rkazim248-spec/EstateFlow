@@ -1,6 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'property.dart' show formatAmount;
+import '../core/matching.dart' show toPkr;
+
+// No Firestore dependency - using Supabase
 
 /// A client record stored in the `clients` collection.
 class Client {
@@ -63,11 +64,7 @@ class Client {
   /// True when the client is still being worked.
   bool get isOpen => status != 'Closed' && status != 'Lost';
 
-  factory Client.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
-    return Client.fromMap(doc.id, doc.data() ?? const {});
-  }
-
-  /// Builds a client from raw Firestore fields.
+  /// Builds a client from raw Supabase fields.
   factory Client.fromMap(String id, Map<String, dynamic> data) {
     double asDouble(Object? value) => switch (value) {
           num n => n.toDouble(),
@@ -82,14 +79,14 @@ class Client {
       purpose: data['purpose'] as String? ?? '',
       type: data['type'] as String? ?? '',
       bedrooms: data['bedrooms'] as String? ?? '',
-      customBedrooms: data['customBedrooms'] as String? ?? '',
+      customBedrooms: data['custom_bedrooms'] as String? ?? '',
       budget: asDouble(data['budget']),
-      budgetUnit: data['budgetUnit'] as String? ?? '',
+      budgetUnit: data['budget_unit'] as String? ?? '',
       location: data['location'] as String? ?? '',
       requirements: data['requirements'] as String? ?? '',
       condition: data['condition'] as String? ?? '',
       status: data['status'] as String? ?? '',
-      ownerId: data['ownerId'] as String?,
+      ownerId: data['owner_id'] as String?,
     );
   }
 
@@ -99,14 +96,15 @@ class Client {
         'purpose': purpose,
         'type': type,
         'bedrooms': bedrooms,
-        'customBedrooms': customBedrooms,
+        'custom_bedrooms': customBedrooms,
         'budget': budget,
-        'budgetUnit': budgetUnit,
+        'budget_unit': budgetUnit,
         'location': location,
         'requirements': requirements,
         'condition': condition,
         'status': status,
-        'ownerId': ownerId,
+        'owner_id': ownerId,
+        'normalized_budget': toPkr(budget, budgetUnit),
       };
 
   Client copyWith({

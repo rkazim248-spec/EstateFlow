@@ -1,23 +1,45 @@
-import 'package:firebase_auth/firebase_auth.dart';
-
-/// Maps Firebase auth failures to messages a person can act on.
+/// Maps auth failures to messages a person can act on. Unknown errors fall
+/// back to the provider message rather than a generic "something went wrong".
 String friendlyAuthError(Object error) {
-  if (error is FirebaseAuthException) {
-    return switch (error.code) {
-      'invalid-email' => 'That email address is not valid.',
-      'user-disabled' => 'This account has been disabled.',
-      'user-not-found' => 'No account found with that email.',
-      'wrong-password' => 'Incorrect email or password.',
-      'invalid-credential' => 'Incorrect email or password.',
-      'email-already-in-use' => 'An account already exists for that email.',
-      'weak-password' => 'Please choose a stronger password.',
-      'operation-not-allowed' =>
-        'This sign-in method is disabled in the Firebase console.',
-      'network-request-failed' => 'No network connection. Try again.',
-      'too-many-requests' => 'Too many attempts. Please try again later.',
-      'missing-id-token' => 'Google sign-in did not return an ID token.',
-      _ => error.message ?? 'Something went wrong. Please try again.',
-    };
+  final message = error.toString().toLowerCase();
+
+  if (message.contains('invalid login credentials') ||
+      message.contains('invalid credentials') ||
+      message.contains('wrong password') ||
+      message.contains('user not found')) {
+    return 'The email or password is incorrect.';
   }
-  return 'Something went wrong. Please try again.';
+  if (message.contains('invalid email')) {
+    return 'Enter a valid email address.';
+  }
+  if (message.contains('already registered') ||
+      message.contains('user already exists')) {
+    return 'An account with this email already exists. Sign in instead.';
+  }
+  if (message.contains('password') && message.contains('weak')) {
+    return 'Use a stronger password with at least 8 characters.';
+  }
+  if (message.contains('too many requests') || message.contains('rate limit')) {
+    return 'Too many attempts. Wait a moment and try again.';
+  }
+  if (message.contains('network') || message.contains('connection')) {
+    return 'Network unavailable. Check your connection and try again.';
+  }
+  if (message.contains('popup') && message.contains('closed')) {
+    return 'Sign-in was cancelled before it finished.';
+  }
+  if (message.contains('popup') && message.contains('blocked')) {
+    return 'Your browser blocked the sign-in window. Allow pop-ups for this site.';
+  }
+  if (message.contains('unauthorized') || message.contains('domain')) {
+    return 'This domain is not authorised for sign-in. Add it under Supabase settings.';
+  }
+  if (message.contains('disabled')) {
+    return 'This account has been disabled.';
+  }
+  if (message.contains('requires recent login')) {
+    return 'Please sign in again to complete this action.';
+  }
+
+  return error.toString().replaceFirst('Exception: ', '');
 }

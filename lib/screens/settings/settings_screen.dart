@@ -35,7 +35,7 @@ class SettingsScreen extends StatelessWidget {
                       radius: 28,
                       backgroundColor: scheme.primaryContainer,
                       child: Text(
-                        _initials(user?.displayName ?? user?.email ?? '?'),
+                        _initials(user?.userMetadata?['full_name'] as String? ?? user?.email ?? '?'),
                         style: TextStyle(
                           color: scheme.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
@@ -49,8 +49,8 @@ class SettingsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user?.displayName?.trim().isNotEmpty == true
-                                ? user!.displayName!.trim()
+                            (user?.userMetadata?['full_name'] as String?)?.trim().isNotEmpty == true
+                                ? (user!.userMetadata!['full_name'] as String).trim()
                                 : 'EstateFlow User',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
