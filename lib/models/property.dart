@@ -1,4 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/matching.dart' show toPkr;
+
+// No Firestore dependency - using Supabase
 
 /// Formats a number without trailing zeros, e.g. `1200` -> `1,200`.
 String formatAmount(num value) {
@@ -83,11 +85,7 @@ class Property {
   /// True when the listing can still be matched against a client.
   bool get isActive => status == 'Available';
 
-  factory Property.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
-    return Property.fromMap(doc.id, doc.data() ?? const {});
-  }
-
-  /// Builds a listing from raw Firestore fields.
+  /// Builds a listing from raw Supabase fields.
   factory Property.fromMap(String id, Map<String, dynamic> data) {
     double asDouble(Object? value) => switch (value) {
           num n => n.toDouble(),
@@ -101,17 +99,17 @@ class Property {
       purpose: data['purpose'] as String? ?? '',
       type: data['type'] as String? ?? '',
       bedrooms: data['bedrooms'] as String? ?? '',
-      customBedrooms: data['customBedrooms'] as String? ?? '',
+      customBedrooms: data['custom_bedrooms'] as String? ?? '',
       area: asDouble(data['area']),
-      areaUnit: data['areaUnit'] as String? ?? '',
+      areaUnit: data['area_unit'] as String? ?? '',
       price: asDouble(data['price']),
-      priceUnit: data['priceUnit'] as String? ?? '',
+      priceUnit: data['price_unit'] as String? ?? '',
       location: data['location'] as String? ?? '',
       status: data['status'] as String? ?? '',
-      ownerName: data['ownerName'] as String? ?? '',
-      ownerPhone: data['ownerPhone'] as String? ?? '',
-      ownerCondition: data['ownerCondition'] as String? ?? '',
-      ownerId: data['ownerId'] as String?,
+      ownerName: data['owner_name'] as String? ?? '',
+      ownerPhone: data['owner_phone'] as String? ?? '',
+      ownerCondition: data['owner_condition'] as String? ?? '',
+      ownerId: data['owner_id'] as String?,
     );
   }
 
@@ -120,17 +118,18 @@ class Property {
         'purpose': purpose,
         'type': type,
         'bedrooms': bedrooms,
-        'customBedrooms': customBedrooms,
+        'custom_bedrooms': customBedrooms,
         'area': area,
-        'areaUnit': areaUnit,
+        'area_unit': areaUnit,
         'price': price,
-        'priceUnit': priceUnit,
+        'price_unit': priceUnit,
         'location': location,
         'status': status,
-        'ownerName': ownerName,
-        'ownerPhone': ownerPhone,
-        'ownerCondition': ownerCondition,
-        'ownerId': ownerId,
+        'owner_name': ownerName,
+        'owner_phone': ownerPhone,
+        'owner_condition': ownerCondition,
+        'owner_id': ownerId,
+        'normalized_price': toPkr(price, priceUnit),
       };
 
   Property copyWith({

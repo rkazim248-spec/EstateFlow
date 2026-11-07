@@ -1,7 +1,7 @@
 /// Shared option lists and display helpers used across EstateFlow forms.
 ///
-/// The values are stored verbatim in Firestore, so they double as the
-/// canonical schema for the `properties` and `clients` collections.
+/// The values are stored verbatim in Supabase, so they double as the
+/// canonical schema for the `properties` and `clients` tables.
 library;
 
 import 'package:flutter/material.dart' show Color;
@@ -101,7 +101,7 @@ class ClientStatus {
   ];
 }
 
-/// OAuth client ids for the Firebase project `estateflow-df9e9`.
+/// OAuth client ids for the Supabase project.
 class GoogleOAuth {
   const GoogleOAuth._();
 
