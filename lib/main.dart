@@ -1,13 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/app_theme.dart';
 import 'core/settings_scope.dart';
+import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_shell.dart';
 import 'services/auth_service.dart';
+import 'services/firestore_service.dart';
 import 'services/settings_controller.dart';
-import 'supabase_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,10 +18,8 @@ Future<void> main() async {
   await settings.load();
 
   try {
-    await Supabase.initialize(
-      url: SupabaseConfig.url,
-      publishableKey: SupabaseConfig.publishableKey,
-    );
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    configureFirestore();
   } catch (error) {
     runApp(_StartupFailureApp(error: error));
     return;
@@ -68,8 +68,8 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
+    return StreamBuilder<User?>(
+      stream: authService.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -77,8 +77,8 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        final session = snapshot.data?.session;
-        if (session == null) {
+        final user = snapshot.data;
+        if (user == null) {
           return LoginScreen(authService: authService);
         }
         return HomeShell(authService: authService);
@@ -87,7 +87,7 @@ class AuthGate extends StatelessWidget {
   }
 }
 
-/// Shown when Supabase cannot start.
+/// Shown when Firebase cannot start, usually a missing platform config.
 class _StartupFailureApp extends StatelessWidget {
   const _StartupFailureApp({required this.error});
 
