@@ -96,7 +96,7 @@ export function MobileDrawer({
   if (!open) return null;
 
   const displayName =
-    profile?.name || user?.displayName || user?.email?.split("@")[0] || "Account";
+    profile?.name || (user?.user_metadata?.full_name as string) || user?.email?.split("@")[0] || "Account";
 
   return (
     <div className="fixed inset-0 z-[70] md:hidden">

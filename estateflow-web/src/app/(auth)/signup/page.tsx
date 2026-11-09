@@ -5,17 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
 import { ArrowRight } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
-import { getFirebase } from "@/lib/firebase";
 import { describeAuthError, describeDataError } from "@/lib/errors";
 import { signupSchema, type SignupValues } from "@/lib/validation";
-import { updateUserProfile } from "@/lib/data";
+import { supabase } from "@/lib/auth";
 import { Button, Field, InlineNotice, Input, Spinner } from "@/components/ui";
 import { GoogleButton } from "@/components/auth/google-button";
 import { Divider, PasswordField } from "@/components/auth/password-field";
@@ -52,19 +47,26 @@ function SignupForm() {
     setError(null);
     setProfileWarning(null);
     try {
-      const { auth } = getFirebase();
-      const credential = await createUserWithEmailAndPassword(
-        auth,
-        values.email.trim(),
-        values.password,
-      );
-      const name = values.name.trim();
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email.trim(),
+        password: values.password,
+        options: { data: { full_name: values.name.trim() } },
+      });
+      if (error) throw error;
 
-      try {
-        await updateProfile(credential.user, { displayName: name });
-        await updateUserProfile(credential.user.uid, { name });
-      } catch (profileError) {
-        setProfileWarning(describeDataError(profileError));
+      const name = values.name.trim();
+      if (data.user) {
+        try {
+          await supabase.from("user_profiles").upsert({
+            id: data.user.id,
+            name,
+            email: values.email.trim(),
+            appearance: "system",
+            accent: "teal",
+          });
+        } catch (profileError) {
+          setProfileWarning(describeDataError(profileError));
+        }
       }
 
       router.replace(next);

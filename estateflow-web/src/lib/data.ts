@@ -1,252 +1,164 @@
-import type { User } from "firebase/auth";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { supabase } from "./supabase";
+import type { ClientRecord, PropertyRecord, UserProfile } from "./types";
 
-import {
-  CLIENT_PURPOSES,
-  PROPERTY_PURPOSES,
-  PROPERTY_STATUSES,
-  CLIENT_STATUSES,
-  typeUsesBedrooms,
-  type ClientPurpose,
-  type ClientStatus,
-  type PriceUnit,
-  type PropertyPurpose,
-  type PropertyStatus,
-  type PropertyType,
-} from "./constants";
-import { getFirebase } from "./firebase";
-import { toPkr } from "./money";
-import type { ClientFormValues, PropertyFormValues } from "./validation";
-import type { UserProfile } from "./types";
+/* -------------------------------------------------------------------------- */
+/* Properties                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export const PROPERTIES_COLLECTION = "properties";
 export const CLIENTS_COLLECTION = "clients";
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
-function propertyPayload(values: PropertyFormValues, uid: string) {
+function toPkr(value: number, unit: string): number {
+  switch (unit) {
+    case "Thousand Per Month":
+      return value * 1000;
+    case "Lakh":
+      return value * 100000;
+    case "Lakh Per Month":
+      return value * 100000;
+    case "Crore":
+      return value * 10000000;
+    default:
+      return value;
+  }
+}
+
+export function propertyPayload(values: Record<string, unknown>, uid: string) {
   const price = Number(values.price);
-  const usesBedrooms = typeUsesBedrooms(values.type);
-
+  const priceUnit = values.priceUnit as string;
   return {
-    name: values.name.trim(),
+    name: (values.name as string).trim(),
     purpose: values.purpose,
     type: values.type,
-    bedrooms: usesBedrooms ? values.bedrooms : "",
-    customBedrooms:
-      usesBedrooms && values.bedrooms === "Custom"
-        ? values.customBedrooms.trim()
-        : "",
+    bedrooms: values.bedrooms,
+    custom_bedrooms: (values.customBedrooms as string).trim(),
     area: Number(values.area),
-    areaUnit: values.areaUnit,
+    area_unit: values.areaUnit,
     price,
-    priceUnit: values.priceUnit,
-    normalizedPrice: toPkr(price, values.priceUnit),
-    location: values.location.trim(),
+    price_unit: priceUnit,
+    location: (values.location as string).trim(),
     status: values.status,
-    ownerName: values.ownerName.trim(),
-    ownerPhone: values.ownerPhone.trim(),
-    ownerCondition: values.ownerCondition.trim(),
-    ownerId: uid,
+    owner_name: (values.ownerName as string).trim(),
+    owner_phone: (values.ownerPhone as string).trim(),
+    owner_condition: (values.ownerCondition as string).trim(),
+    owner_id: uid,
+    normalized_price: toPkr(price, priceUnit),
   };
 }
 
 export async function createProperty(
-  values: PropertyFormValues,
+  values: Record<string, unknown>,
   uid: string,
 ): Promise<string> {
-  const { db } = getFirebase();
-  const created = await addDoc(collection(db, PROPERTIES_COLLECTION), {
-    ...propertyPayload(values, uid),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return created.id;
+  const { data, error } = await supabase
+    .from(PROPERTIES_COLLECTION)
+    .insert({ ...propertyPayload(values, uid), created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateProperty(
   id: string,
-  values: PropertyFormValues,
+  values: Record<string, unknown>,
   uid: string,
 ): Promise<void> {
-  const { db } = getFirebase();
-  await updateDoc(doc(db, PROPERTIES_COLLECTION, id), {
-    ...propertyPayload(values, uid),
-    updatedAt: serverTimestamp(),
-  });
+  const { error } = await supabase
+    .from(PROPERTIES_COLLECTION)
+    .update({ ...propertyPayload(values, uid), updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export async function deleteProperty(id: string): Promise<void> {
-  const { db } = getFirebase();
-  await deleteDoc(doc(db, PROPERTIES_COLLECTION, id));
+  const { error } = await supabase.from(PROPERTIES_COLLECTION).delete().eq("id", id);
+  if (error) throw error;
 }
 
-function clientPayload(values: ClientFormValues, uid: string) {
-  const budget = Number(values.budget);
-  const usesBedrooms = typeUsesBedrooms(values.type);
+/* -------------------------------------------------------------------------- */
+/* Clients                                                                     */
+/* -------------------------------------------------------------------------- */
 
+function clientPayload(values: Record<string, unknown>, uid: string) {
+  const budget = Number(values.budget);
+  const budgetUnit = values.budgetUnit as string;
   return {
-    name: values.name.trim(),
-    phone: values.phone.trim(),
+    name: (values.name as string).trim(),
+    phone: (values.phone as string).trim(),
     purpose: values.purpose,
     type: values.type,
-    bedrooms: usesBedrooms ? values.bedrooms : "",
-    customBedrooms:
-      usesBedrooms && values.bedrooms === "Custom"
-        ? values.customBedrooms.trim()
-        : "",
+    bedrooms: values.bedrooms,
+    custom_bedrooms: (values.customBedrooms as string).trim(),
     budget,
-    budgetUnit: values.budgetUnit,
-    normalizedBudget: toPkr(budget, values.budgetUnit),
-    location: values.location.trim(),
-    requirements: values.requirements.trim(),
-    condition: values.condition.trim(),
+    budget_unit: budgetUnit,
+    location: (values.location as string).trim(),
+    requirements: (values.requirements as string).trim(),
+    condition: (values.condition as string).trim(),
     status: values.status,
-    ownerId: uid,
+    owner_id: uid,
+    normalized_budget: toPkr(budget, budgetUnit),
   };
 }
 
 export async function createClient(
-  values: ClientFormValues,
+  values: Record<string, unknown>,
   uid: string,
 ): Promise<string> {
-  const { db } = getFirebase();
-  const created = await addDoc(collection(db, CLIENTS_COLLECTION), {
-    ...clientPayload(values, uid),
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return created.id;
+  const { data, error } = await supabase
+    .from(CLIENTS_COLLECTION)
+    .insert({ ...clientPayload(values, uid), created_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateClient(
   id: string,
-  values: ClientFormValues,
+  values: Record<string, unknown>,
   uid: string,
 ): Promise<void> {
-  const { db } = getFirebase();
-  await updateDoc(doc(db, CLIENTS_COLLECTION, id), {
-    ...clientPayload(values, uid),
-    updatedAt: serverTimestamp(),
-  });
+  const { error } = await supabase
+    .from(CLIENTS_COLLECTION)
+    .update({ ...clientPayload(values, uid), updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  const { db } = getFirebase();
-  await deleteDoc(doc(db, CLIENTS_COLLECTION, id));
+  const { error } = await supabase.from(CLIENTS_COLLECTION).delete().eq("id", id);
+  if (error) throw error;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Profile                                                                     */
+/* Profiles                                                                   */
 /* -------------------------------------------------------------------------- */
 
-function normaliseAppearance(value: unknown): UserProfile["appearance"] {
-  return value === "light" || value === "dark" || value === "system"
-    ? value
-    : "system";
-}
+export async function ensureUserProfile(user: { id: string; email: string | null; user_metadata?: Record<string, unknown> }) {
+  const { data: existing } = await supabase
+    .from("user_profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
-/**
- * Returns the `users/{uid}` profile, creating a minimal one on first sign-in.
- * Throws only on real failures; callers may continue without a profile.
- */
-export async function ensureUserProfile(user: User): Promise<UserProfile> {
-  const { db } = getFirebase();
-  const reference = doc(db, "users", user.uid);
-  const snapshot = await getDoc(reference);
-
-  if (snapshot.exists()) {
-    const data = snapshot.data();
-    const name =
-      typeof data.name === "string" && data.name.trim()
-        ? data.name
-        : user.displayName ?? user.email?.split("@")[0] ?? "EstateFlow user";
-    const email =
-      typeof data.email === "string" && data.email ? data.email : user.email ?? "";
-
-    // Repair profiles created before a display name was available.
-    if (!data.name || !data.email) {
-      await setDoc(
-        reference,
-        { name, email, updatedAt: serverTimestamp() },
-        { merge: true },
-      );
-    }
-
-    return {
-      uid: user.uid,
-      name,
-      email,
-      appearance: normaliseAppearance(data.appearance),
-      accent: typeof data.accent === "string" ? data.accent : "teal",
-      createdAt: null,
-      updatedAt: null,
-    };
+  if (existing) {
+    return existing;
   }
 
-  const initial = {
-    name: user.displayName ?? user.email?.split("@")[0] ?? "EstateFlow user",
-    email: user.email ?? "",
-    appearance: "system" as const,
-    accent: "teal",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-
-  await setDoc(reference, initial);
-
-  return {
-    uid: user.uid,
-    name: initial.name,
-    email: initial.email,
-    appearance: initial.appearance,
-    accent: initial.accent,
-    createdAt: null,
-    updatedAt: null,
-  };
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .insert({
+      id: user.id,
+      name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "",
+      email: user.email || "",
+      appearance: "system",
+      accent: "teal",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
 }
-
-export async function updateUserProfile(
-  uid: string,
-  patch: Partial<Pick<UserProfile, "name" | "appearance" | "accent">>,
-): Promise<void> {
-  const { db } = getFirebase();
-  await setDoc(
-    doc(db, "users", uid),
-    { ...patch, updatedAt: serverTimestamp() },
-    { merge: true },
-  );
-}
-
-/**
- * The type helpers below keep the form's string unions in sync with the
- * values written to Firestore. They are intentionally no-ops at runtime.
- */
-export type StoredPropertyShape = {
-  purpose: PropertyPurpose;
-  type: PropertyType;
-  status: PropertyStatus;
-  priceUnit: PriceUnit;
-};
-
-export type StoredClientShape = {
-  purpose: ClientPurpose;
-  type: PropertyType;
-  status: ClientStatus;
-  budgetUnit: PriceUnit;
-};
-
-export const SCHEMA_VALUES = {
-  purposes: PROPERTY_PURPOSES,
-  statuses: PROPERTY_STATUSES,
-  clientPurposes: CLIENT_PURPOSES,
-  clientStatuses: CLIENT_STATUSES,
-};

@@ -1,6 +1,6 @@
 "use client";
 
-import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { createClient } from "@supabase/supabase-js";
 import {
   createContext,
   useCallback,
@@ -12,16 +12,14 @@ import {
   type ReactNode,
 } from "react";
 
-import { ensureUserProfile } from "./data";
-import { describeAuthError, describeDataError } from "./errors";
-import { FirebaseNotConfiguredError, getFirebase, isFirebaseConfigured } from "./firebase";
-import { useTheme } from "./theme";
-import type { UserProfile } from "./types";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wmkgkuyowryspgcrybbw.supabase.co";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indta2drdXlvd3J5c3BnY3J5YmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwNjQ4NzAsImV4cCI6MjEwOTY0MDg3MH0.OpG98bq6WYHOorV8mCCWEyWWaYS0iClGuaaWPVzo33g";
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface AuthContextValue {
-  user: User | null;
-  profile: UserProfile | null;
-  /** True until Firebase has resolved the persisted session. */
+  user: { id: string; email: string | null; user_metadata?: Record<string, unknown> } | null;
+  profile: { id: string; name: string; email: string; appearance: string; accent: string } | null;
   loading: boolean;
   configError: string | null;
   profileError: string | null;
@@ -32,67 +30,51 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { applyRemotePreferences } = useTheme();
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<AuthContextValue["user"]>(null);
+  const [profile, setProfile] = useState<AuthContextValue["profile"]>(null);
   const [loading, setLoading] = useState(true);
   const [configError, setConfigError] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const userRef = useRef<User | null>(null);
+  const userRef = useRef<AuthContextValue["user"]>(null);
 
-  const loadProfile = useCallback(
-    async (nextUser: User) => {
-      try {
-        const nextProfile = await ensureUserProfile(nextUser);
-        if (userRef.current?.uid !== nextUser.uid) return;
-        setProfile(nextProfile);
-        setProfileError(null);
-        applyRemotePreferences(nextProfile.appearance, nextProfile.accent);
-      } catch (error) {
-        if (userRef.current?.uid !== nextUser.uid) return;
-        setProfile(null);
-        setProfileError(describeDataError(error));
-      }
-    },
-    [applyRemotePreferences],
-  );
+  const loadProfile = useCallback(async (nextUser: AuthContextValue["user"]) => {
+    if (!nextUser) return;
+    try {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", nextUser.id)
+        .single();
+      if (error) throw error;
+      if (userRef.current?.id !== nextUser.id) return;
+      setProfile(data as AuthContextValue["profile"]);
+      setProfileError(null);
+    } catch (error) {
+      if (userRef.current?.id !== nextUser.id) return;
+      setProfile(null);
+      setProfileError(error instanceof Error ? error.message : "Could not load profile.");
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isFirebaseConfigured) {
-      setConfigError(new FirebaseNotConfiguredError().message);
-      setLoading(false);
-      return;
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const nextUser = session?.user
+          ? { id: session.user.id, email: session.user.email ?? null, user_metadata: session.user.user_metadata }
+          : null;
+        userRef.current = nextUser;
+        setUser(nextUser);
+        setLoading(false);
+        if (nextUser) {
+          void loadProfile(nextUser);
+        } else {
+          setProfile(null);
+          setProfileError(null);
+        }
+      },
+    );
 
-    let unsubscribe = () => {};
-    try {
-      const { auth } = getFirebase();
-      unsubscribe = onAuthStateChanged(
-        auth,
-        (nextUser) => {
-          userRef.current = nextUser;
-          setUser(nextUser);
-          setLoading(false);
-          if (nextUser) {
-            void loadProfile(nextUser);
-          } else {
-            setProfile(null);
-            setProfileError(null);
-          }
-        },
-        (error) => {
-          setConfigError(describeAuthError(error));
-          setLoading(false);
-        },
-      );
-    } catch (error) {
-      setConfigError(
-        error instanceof Error ? error.message : "Firebase could not start.",
-      );
-      setLoading(false);
-    }
-
-    return () => unsubscribe();
+    return () => subscription.unsubscribe();
   }, [loadProfile]);
 
   const refreshProfile = useCallback(async () => {
@@ -100,8 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile]);
 
   const signOutUser = useCallback(async () => {
-    const { auth } = getFirebase();
-    await signOut(auth);
+    await supabase.auth.signOut();
   }, []);
 
   const value = useMemo(

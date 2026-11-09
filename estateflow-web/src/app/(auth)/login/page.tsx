@@ -5,12 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { ArrowRight } from "lucide-react";
 
 import { useAuth } from "@/lib/auth";
-import { getFirebase } from "@/lib/firebase";
 import { describeAuthError } from "@/lib/errors";
+import { supabase } from "@/lib/auth";
 import { loginSchema, type LoginValues } from "@/lib/validation";
 import { Button, Field, InlineNotice, Input, Spinner } from "@/components/ui";
 import { GoogleButton } from "@/components/auth/google-button";
@@ -46,8 +45,11 @@ function LoginForm() {
     setSubmitting(true);
     setError(null);
     try {
-      const { auth } = getFirebase();
-      await signInWithEmailAndPassword(auth, values.email.trim(), values.password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email.trim(),
+        password: values.password,
+      });
+      if (error) throw error;
       router.replace(next);
     } catch (submitError) {
       setError(describeAuthError(submitError));

@@ -1,4 +1,4 @@
-import type { DocumentData } from "firebase/firestore";
+type DocumentData = Record<string, unknown>;
 
 import {
   AREA_UNITS,
@@ -49,10 +49,10 @@ function oneOf<T extends string>(
  */
 export function mapProperty(id: string, data: DocumentData): PropertyRecord {
   const price = asNumber(data.price);
-  const priceUnit = isPriceUnit(data.priceUnit)
-    ? (data.priceUnit as PriceUnit)
+  const priceUnit = isPriceUnit(data.price_unit)
+    ? (data.price_unit as PriceUnit)
     : "Lakh";
-  const storedNormalized = asNumber(data.normalizedPrice, Number.NaN);
+  const storedNormalized = asNumber(data.normalized_price, Number.NaN);
 
   return {
     id,
@@ -64,9 +64,9 @@ export function mapProperty(id: string, data: DocumentData): PropertyRecord {
     ),
     type: oneOf<PropertyType>(data.type, PROPERTY_TYPES, "House"),
     bedrooms: asString(data.bedrooms),
-    customBedrooms: asString(data.customBedrooms),
+    customBedrooms: asString(data.custom_bedrooms),
     area: asNumber(data.area),
-    areaUnit: oneOf<AreaUnit>(data.areaUnit, AREA_UNITS, "Marla"),
+    areaUnit: oneOf<AreaUnit>(data.area_unit, AREA_UNITS, "Marla"),
     price,
     priceUnit,
     location: asString(data.location),
@@ -75,22 +75,22 @@ export function mapProperty(id: string, data: DocumentData): PropertyRecord {
       PROPERTY_STATUSES,
       "Available",
     ),
-    ownerName: asString(data.ownerName),
-    ownerPhone: asString(data.ownerPhone),
-    ownerCondition: asString(data.ownerCondition),
-    ownerId: asString(data.ownerId) || null,
-    normalizedPrice: Number.isFinite(storedNormalized) && isPriceUnit(data.priceUnit)
+    ownerName: asString(data.owner_name),
+    ownerPhone: asString(data.owner_phone),
+    ownerCondition: asString(data.owner_condition),
+    ownerId: asString(data.owner_id) || null,
+    normalizedPrice: Number.isFinite(storedNormalized) && isPriceUnit(data.price_unit)
       ? toPkr(price, priceUnit)
-      : toPkr(price, priceUnit),
-    createdAt: toDate(data.createdAt),
-    updatedAt: toDate(data.updatedAt),
+      : toPkr(price, (data.price_unit as string) || "Lakh"),
+    createdAt: toDate(data.created_at as never),
+    updatedAt: toDate(data.updated_at as never),
   };
 }
 
 export function mapClient(id: string, data: DocumentData): ClientRecord {
   const budget = asNumber(data.budget);
-  const budgetUnit = isPriceUnit(data.budgetUnit)
-    ? (data.budgetUnit as PriceUnit)
+  const budgetUnit = isPriceUnit(data.budget_unit)
+    ? (data.budget_unit as PriceUnit)
     : "Lakh";
 
   return {
@@ -104,16 +104,16 @@ export function mapClient(id: string, data: DocumentData): ClientRecord {
     ),
     type: oneOf<PropertyType>(data.type, PROPERTY_TYPES, "House"),
     bedrooms: asString(data.bedrooms),
-    customBedrooms: asString(data.customBedrooms),
+    customBedrooms: asString(data.custom_bedrooms),
     budget,
-    budgetUnit,
+    budgetUnit: isPriceUnit(data.budget_unit) ? (data.budget_unit as PriceUnit) : "Lakh",
     location: asString(data.location),
     requirements: asString(data.requirements),
     condition: asString(data.condition),
     status: oneOf<ClientStatus>(data.status, CLIENT_STATUSES, "New"),
-    ownerId: asString(data.ownerId) || null,
+    ownerId: asString(data.owner_id) || null,
     normalizedBudget: toPkr(budget, budgetUnit),
-    createdAt: toDate(data.createdAt),
-    updatedAt: toDate(data.updatedAt),
+    createdAt: toDate(data.created_at as never),
+    updatedAt: toDate(data.updated_at as never),
   };
 }

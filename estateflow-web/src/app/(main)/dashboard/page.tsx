@@ -88,7 +88,7 @@ export default function DashboardPage() {
   const recentProperties = sortRecent(propertyList).slice(0, 4);
   const recentClients = sortRecent(clientList).slice(0, 4);
   const firstName =
-    (profile?.name || user?.displayName || "").trim().split(/\s+/)[0] || null;
+    (profile?.name || (user?.user_metadata?.full_name as string) || "").trim().split(/\s+/)[0] || null;
 
   return (
     <div>
